@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Semáforo" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Semáforo de Mercado</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e293b;
+      --text: #cbd5e1;
+      --muted: #475569;
+      --dim: #1e293b;
+      --green-on: #16a34a;
+      --green-glow: #22c55e;
+      --green-off: #052e16;
+      --green-text: #4ade80;
+      --amber-on: #d97706;
+      --amber-glow: #fbbf24;
+      --amber-off: #1c1003;
+      --amber-text: #fcd34d;
+      --red-on: #b91c1c;
+      --red-glow: #f87171;
+      --red-off: #1c0505;
+      --red-text: #fca5a5;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+      padding-top: max(env(safe-area-inset-top), 32px);
+      background-image: radial-gradient(ellipse at 50% 0%, #0d1117 0%, var(--bg) 70%);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .header-sub {
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .header-title {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 2px;
+    }
+
+    /* ── LIGHTS ROW ── */
+    .lights-row {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── SINGLE LIGHT ── */
+    .light-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .light-name {
+      text-align: center;
+    }
+    .light-name-main {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text);
+      text-transform: uppercase;
+    }
+    .light-name-sub {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* Housing */
+    .housing {
+      background: linear-gradient(180deg, #1a1a1a 0%, #111 100%);
+      border: 3px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      width: 76px;
+      position: relative;
+      transition: box-shadow 0.8s ease;
+    }
+    .screw {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+    }
+    .screw.tl { top: 7px; left: 7px; }
+    .screw.tr { top: 7px; right: 7px; }
+    .screw.bl { bottom: 7px; left: 7px; }
+    .screw.br { bottom: 7px; right: 7px; }
+
+    .bulb {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #1a1a1a;
+      transition: all 0.6s ease;
+    }
+
+    /* Off states */
+    .bulb.red-off   { background: var(--red-off);   box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
+    .bulb.amber-off { background: var(--amber-off);  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
+    .bulb.green-off { background: var(--green-off);  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
+
+    /* On states */
+    .bulb.red-on {
+      background: radial-gradient(circle at 35% 35%, var(--red-glow), var(--red-on));
+      border-color: var(--red-on);
+      box-shadow: 0 0 18px var(--red-glow), 0 0 36px rgba(248,113,113,0.4), inset 0 2px 4px rgba(255,255,255,0.25);
+    }
+    .bulb.amber-on {
+      background: radial-gradient(circle at 35% 35%, var(--amber-glow), var(--amber-on));
+      border-color: var(--amber-on);
+      box-shadow: 0 0 18px var(--amber-glow), 0 0 36px rgba(251,191,36,0.4), inset 0 2px 4px rgba(255,255,255,0.25);
+      animation: pulse-amber 2s ease-in-out infinite;
+    }
+    .bulb.green-on {
+      background: radial-gradient(circle at 35% 35%, var(--green-glow), var(--green-on));
+      border-color: var(--green-on);
+      box-shadow: 0 0 18px var(--green-glow), 0 0 36px rgba(34,197,94,0.4), inset 0 2px 4px rgba(255,255,255,0.25);
+    }
+
+    @keyframes pulse-amber {
+      0%,100% { box-shadow: 0 0 18px var(--amber-glow), 0 0 36px rgba(251,191,36,0.4), inset 0 2px 4px rgba(255,255,255,0.25); }
+      50%      { box-shadow: 0 0 28px var(--amber-glow), 0 0 56px rgba(251,191,36,0.6), inset 0 2px 4px rgba(255,255,255,0.25); }
+    }
+
+    /* Loading dots inside housing */
+    .loading-dots {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #333;
+      animation: dot-pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.25s; }
+    .dot:nth-child(3) { animation-delay: 0.5s; }
+    @keyframes dot-pulse {
+      0%,100% { opacity: 0.15; transform: scale(0.8); }
+      50%      { opacity: 0.8;  transform: scale(1.1); }
+    }
+
+    /* Value display */
+    .value-area {
+      text-align: center;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .value-num {
+      font-family: Georgia, serif;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .value-change {
+      font-size: 10px;
+    }
+    .value-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .value-loading { font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+    .value-error   { font-size: 10px; color: var(--dim); }
+
+    /* Thresholds */
+    .thresholds {
+      font-size: 8px;
+      color: #1e3a5f;
+      text-align: center;
+      line-height: 1.8;
+      max-width: 100px;
+    }
+
+    /* ── CONSOLIDATED ── */
+    .consolidated {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .consolidated-title {
+      font-size: 8px;
+      letter-spacing: 4px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+    .consolidated-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-radius: 10px;
+      padding: 10px 20px;
+      width: 100%;
+    }
+    .consolidated-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .consolidated-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .consolidated-msg {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+    .dots-row {
+      display: flex;
+      gap: 6px;
+    }
+    .mini-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+    }
+    .last-update {
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--dim);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active { opacity: 0.7; }
+    button:disabled { color: var(--dim); border-color: #111; cursor: not-allowed; }
+
+    /* ── NOTA AAII ── */
+    .nota {
+      margin-top: 20px;
+      font-size: 8px;
+      color: #1e3a5f;
+      text-align: center;
+      line-height: 1.8;
+      max-width: 300px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-sub">Patrimonio Familiar</div>
+    <div class="header-title">Semáforo de Mercado</div>
+  </div>
+
+  <div class="lights-row" id="lights-row">
+    <!-- rendered by JS -->
+  </div>
+
+  <div class="consolidated" id="consolidated" style="display:none"></div>
+
+  <div class="footer">
+    <div class="last-update" id="last-update"></div>
+    <button id="btn-update" onclick="fetchAll()">↺ Actualizar</button>
+  </div>
+
+  <div class="nota" id="nota"></div>
+
+  <script>
+  // ── CONFIG ──────────────────────────────────────────────────────────────
+  const INDICATORS = [
+    {
+      id: "vix",
+      label: "VIX",
+      fullName: "Volatility Index",
+      parseHint: `Search for the current VIX CBOE Volatility Index value today. Return ONLY valid JSON, no markdown:
+{"value": <number>, "change": <number_or_null>}`,
+      zones: [
+        { signal: "green", label: "ALCISTA", test: v => v < 16 },
+        { signal: "amber", label: "NEUTRAL",  test: v => v >= 16 && v <= 20 },
+        { signal: "red",   label: "BAJISTA",  test: v => v > 20 },
+      ],
+      thresholds: ["< 16 alcista", "16–20 neutral", "> 20 bajista"],
+      format: v => v.toFixed(1),
+    },
+    {
+      id: "pcr",
+      label: "Put/Call",
+      fullName: "Put/Call Ratio",
+      parseHint: `Search for the current CBOE equity put/call ratio today. Return ONLY valid JSON:
+{"value": <number>, "change": <number_or_null>}`,
+      zones: [
+        { signal: "green", label: "ALCISTA", test: v => v > 1.2 },
+        { signal: "amber", label: "NEUTRAL",  test: v => v >= 0.6 && v <= 1.2 },
+        { signal: "red",   label: "BAJISTA",  test: v => v < 0.6 },
+      ],
+      thresholds: ["> 1.20 alcista", "0.60–1.20 neutral", "< 0.60 bajista"],
+      format: v => v.toFixed(2),
+    },
+    {
+      id: "aaii",
+      label: "AAII",
+      fullName: "Bull-Bear Spread",
+      parseHint: `Search for the latest AAII sentiment survey bull-bear spread (bullish% minus bearish%). Return ONLY valid JSON:
+{"value": <number>, "bullish": <number_or_null>, "bearish": <number_or_null>, "date": "<string>"}`,
+      zones: [
+        { signal: "green", label: "ALCISTA", test: v => v < -20 },
+        { signal: "amber", label: "NEUTRAL",  test: v => v >= -20 && v <= 30 },
+        { signal: "red",   label: "BAJISTA",  test: v => v > 30 },
+      ],
+      thresholds: ["< −20% alcista", "−20% a +30% neutral", "> +30% bajista"],
+      format: v => (v > 0 ? "+" : "") + v.toFixed(1) + "%",
+    },
+  ];
+
+  const C = {
+    green: { on:"#16a34a", glow:"#22c55e", off:"#052e16", text:"#4ade80" },
+    amber: { on:"#d97706", glow:"#fbbf24", off:"#1c1003", text:"#fcd34d" },
+    red:   { on:"#b91c1c", glow:"#f87171", off:"#1c0505", text:"#fca5a5" },
+  };
+
+  // ── STATE ────────────────────────────────────────────────────────────────
+  let state = { results: {}, loading: {}, errors: {} };
+
+  // ── RENDER ───────────────────────────────────────────────────────────────
+  function getZone(ind, value) {
+    return ind.zones.find(z => z.test(value)) ?? ind.zones[1];
+  }
+
+  function renderLights() {
+    const row = document.getElementById("lights-row");
+    row.innerHTML = INDICATORS.map(ind => {
+      const res     = state.results[ind.id];
+      const loading = state.loading[ind.id];
+      const error   = state.errors[ind.id];
+      const zone    = res ? getZone(ind, res.value) : null;
+
+      const housingShadow = zone
+        ? `0 0 36px ${C[zone.signal].glow}44`
+        : "none";
+
+      // Bulb classes
+      const bulbs = ["red","amber","green"].map(sig => {
+        const isOn = !loading && !error && zone?.signal === sig;
+        return `<div class="bulb ${sig}-${isOn ? "on" : "off"}"></div>`;
+      }).join("");
+
+      // Loading overlay
+      const loadingHTML = loading
+        ? `<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
+        : "";
+
+      // Value area
+      let valueHTML = "";
+      if (loading) {
+        valueHTML = `<div class="value-loading">buscando...</div>`;
+      } else if (error) {
+        valueHTML = `<div class="value-error">—</div>`;
+      } else if (res) {
+        const col = C[zone.signal].text;
+        const changeHTML = res.change != null
+          ? `<div class="value-change" style="color:${res.change > 0 ? C.red.text : C.green.text}">
+               ${res.change > 0 ? "▲" : "▼"} ${Math.abs(res.change).toFixed(2)}
+             </div>`
+          : "";
+        valueHTML = `
+          <div class="value-num" style="color:${col}">${ind.format(res.value)}</div>
+          ${changeHTML}
+          <div class="value-label" style="color:${col}">${zone.label}</div>
+        `;
+      }
+
+      return `
+        <div class="light-wrap">
+          <div class="light-name">
+            <div class="light-name-main">${ind.label}</div>
+            <div class="light-name-sub">${ind.fullName}</div>
+          </div>
+          <div class="housing" style="box-shadow:${housingShadow}">
+            <div class="screw tl"></div><div class="screw tr"></div>
+            <div class="screw bl"></div><div class="screw br"></div>
+            ${bulbs}
+            ${loadingHTML}
+          </div>
+          <div class="value-area">${valueHTML}</div>
+          <div class="thresholds">${ind.thresholds.map(t => `<div>${t}</div>`).join("")}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderConsolidated() {
+    const div = document.getElementById("consolidated");
+    const nota = document.getElementById("nota");
+
+    const zones = INDICATORS.map(ind => {
+      const r = state.results[ind.id];
+      return r ? getZone(ind, r.value) : null;
+    }).filter(Boolean);
+
+    if (zones.length < 2) { div.style.display = "none"; return; }
+
+    const reds   = zones.filter(z => z.signal === "red").length;
+    const greens = zones.filter(z => z.signal === "green").length;
+
+    let sig, label, msg;
+    if      (reds   >= 2) { sig = "red";   label = "DEFENSIVO"; msg = "Mantener posición conservadora en PP"; }
+    else if (greens >= 2) { sig = "green"; label = "FAVORABLE"; msg = "Condiciones favorables para renta variable"; }
+    else                  { sig = "amber"; label = "MIXTO";      msg = "Señales divergentes — vigilar evolución"; }
+
+    const c = C[sig];
+    const dotsHTML = zones.map(z =>
+      `<div class="mini-dot" style="background:${C[z.signal].on};box-shadow:0 0 6px ${C[z.signal].glow}"></div>`
+    ).join("");
+
+    div.style.display = "flex";
+    div.innerHTML = `
+      <div class="consolidated-title">Señal Consolidada</div>
+      <div class="consolidated-badge" style="background:${c.on}18;border:1px solid ${c.on}44">
+        <div class="consolidated-dot" style="background:${c.on};box-shadow:0 0 10px ${c.glow}"></div>
+        <div>
+          <div class="consolidated-label" style="color:${c.text}">${label}</div>
+          <div class="consolidated-msg">${msg}</div>
+        </div>
+      </div>
+      <div class="dots-row">${dotsHTML}</div>
+    `;
+
+    // AAII note if available
+    const aaiiRes = state.results["aaii"];
+    if (aaiiRes?.date) {
+      nota.textContent = `AAII: datos de la semana del ${aaiiRes.date} · VIX y PCR en tiempo real`;
+    } else {
+      nota.textContent = "AAII se publica semanalmente (jueves) · VIX y PCR en tiempo real";
+    }
+  }
+
+  function render() {
+    renderLights();
+    renderConsolidated();
+
+    const anyLoading = Object.values(state.loading).some(Boolean);
+    const btn = document.getElementById("btn-update");
+    btn.disabled = anyLoading;
+    btn.textContent = anyLoading ? "consultando..." : "↺ Actualizar";
+  }
+
+  // ── FETCH ────────────────────────────────────────────────────────────────
+  async function fetchOne(ind) {
+    state.loading[ind.id] = true;
+    render();
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 500,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          messages: [{ role: "user", content: ind.parseHint }],
+        }),
+      });
+      const data = await res.json();
+      const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+      const match = text.match(/\{[\s\S]*?\}/);
+      if (!match) throw new Error("no json");
+      state.results[ind.id] = JSON.parse(match[0]);
+    } catch (e) {
+      state.errors[ind.id] = true;
+    } finally {
+      state.loading[ind.id] = false;
+      render();
+    }
+  }
+
+  async function fetchAll() {
+    state.results = {};
+    state.errors  = {};
+    INDICATORS.forEach(ind => { state.loading[ind.id] = true; });
+    render();
+
+    await Promise.all(INDICATORS.map(ind => fetchOne(ind)));
+
+    const now = new Date();
+    document.getElementById("last-update").textContent =
+      "Actualizado " + now.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
+  }
+
+  // ── SERVICE WORKER ───────────────────────────────────────────────────────
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────
+  fetchAll();
+  </script>
+</body>
+</html>
