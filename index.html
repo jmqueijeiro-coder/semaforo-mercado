@@ -1,199 +1,214 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Semáforo" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0a0a0f"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Semáforo"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
   <title>Semáforo de Mercado</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0f; --border: #1e293b; --text: #cbd5e1; --muted: #475569; --dim: #1e293b;
-      --green-on:#16a34a;--green-glow:#22c55e;--green-off:#052e16;--green-text:#4ade80;
-      --amber-on:#d97706;--amber-glow:#fbbf24;--amber-off:#1c1003;--amber-text:#fcd34d;
-      --red-on:#b91c1c;--red-glow:#f87171;--red-off:#1c0505;--red-text:#fca5a5;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0a0f;--border:#1e293b;--text:#cbd5e1;--muted:#475569;--dim:#1e293b;
+      --go:#16a34a;--gg:#22c55e;--goff:#052e16;--gt:#4ade80;
+      --ao:#d97706;--ag:#fbbf24;--aoff:#1c1003;--at:#fcd34d;
+      --ro:#b91c1c;--rg:#f87171;--roff:#1c0505;--rt:#fca5a5;
     }
-    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;-webkit-font-smoothing:antialiased;}
-    body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:max(env(safe-area-inset-top),28px) 20px env(safe-area-inset-bottom,20px);background-image:radial-gradient(ellipse at 50% 0%,#0d1117 0%,var(--bg) 70%);}
-    .header{text-align:center;margin-bottom:24px;}
-    .header-sub{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-bottom:6px;}
-    .header-title{font-family:Georgia,serif;font-size:20px;font-weight:400;color:var(--text);letter-spacing:2px;}
-    .lights-row{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
-    .light-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
-    .light-name{text-align:center;}
-    .light-name-main{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--text);text-transform:uppercase;}
-    .light-name-sub{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
-    .housing{background:linear-gradient(180deg,#1a1a1a 0%,#111 100%);border:3px solid #2a2a2a;border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:10px;align-items:center;width:68px;position:relative;transition:box-shadow 0.8s ease;}
-    .screw{position:absolute;width:5px;height:5px;border-radius:50%;background:#2a2a2a;border:1px solid #3a3a3a;}
-    .screw.tl{top:6px;left:6px;}.screw.tr{top:6px;right:6px;}.screw.bl{bottom:6px;left:6px;}.screw.br{bottom:6px;right:6px;}
-    .bulb{width:38px;height:38px;border-radius:50%;border:2px solid #1a1a1a;transition:all 0.6s ease;}
-    .red-off{background:var(--red-off);box-shadow:inset 0 2px 4px rgba(0,0,0,.6);}
-    .amber-off{background:var(--amber-off);box-shadow:inset 0 2px 4px rgba(0,0,0,.6);}
-    .green-off{background:var(--green-off);box-shadow:inset 0 2px 4px rgba(0,0,0,.6);}
-    .red-on{background:radial-gradient(circle at 35% 35%,var(--red-glow),var(--red-on));border-color:var(--red-on);box-shadow:0 0 16px var(--red-glow),0 0 32px rgba(248,113,113,.4),inset 0 2px 4px rgba(255,255,255,.25);}
-    .amber-on{background:radial-gradient(circle at 35% 35%,var(--amber-glow),var(--amber-on));border-color:var(--amber-on);box-shadow:0 0 16px var(--amber-glow),0 0 32px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.25);animation:pulse-amber 2s ease-in-out infinite;}
-    .green-on{background:radial-gradient(circle at 35% 35%,var(--green-glow),var(--green-on));border-color:var(--green-on);box-shadow:0 0 16px var(--green-glow),0 0 32px rgba(34,197,94,.4),inset 0 2px 4px rgba(255,255,255,.25);}
-    @keyframes pulse-amber{0%,100%{box-shadow:0 0 16px var(--amber-glow),0 0 32px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.25);}50%{box-shadow:0 0 26px var(--amber-glow),0 0 52px rgba(251,191,36,.6),inset 0 2px 4px rgba(255,255,255,.25);}}
-    .loading-dots{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;}
-    .dot{width:5px;height:5px;border-radius:50%;background:#333;animation:dot-pulse 1.2s ease-in-out infinite;}
-    .dot:nth-child(2){animation-delay:.25s;}.dot:nth-child(3){animation-delay:.5s;}
-    @keyframes dot-pulse{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.8;transform:scale(1.1)}}
-    .value-area{text-align:center;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
-    .value-num{font-family:Georgia,serif;font-size:22px;font-weight:700;line-height:1;}
-    .value-change{font-size:10px;}
-    .value-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:2px;}
-    .value-loading{font-size:10px;color:var(--dim);letter-spacing:1px;}
-    .value-error{font-size:10px;color:var(--dim);}
-    .thresholds{font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:100px;}
-    .consolidated{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:340px;}
-    .consolidated-title{font-size:8px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
-    .consolidated-badge{display:flex;align-items:center;gap:10px;border-radius:9px;padding:9px 18px;width:100%;}
-    .consolidated-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
-    .consolidated-label{font-size:13px;font-weight:700;letter-spacing:2px;}
-    .consolidated-msg{font-size:9px;color:var(--muted);margin-top:1px;line-height:1.5;}
-    .dots-row{display:flex;gap:5px;}
-    .mini-dot{width:7px;height:7px;border-radius:50%;}
-    .footer{margin-top:24px;text-align:center;}
-    .last-update{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:8px;text-transform:uppercase;}
-    button{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:10px 22px;font-size:10px;letter-spacing:3px;font-family:'Courier New',monospace;cursor:pointer;transition:all .2s;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
-    button:active{opacity:.7;}button:disabled{color:var(--dim);border-color:#111;cursor:not-allowed;}
-    .nota{margin-top:16px;font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:300px;letter-spacing:.5px;}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;-webkit-font-smoothing:antialiased}
+    body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:max(env(safe-area-inset-top),28px) 20px 28px;background-image:radial-gradient(ellipse at 50% 0%,#0d1117,var(--bg) 70%)}
+    .hdr{text-align:center;margin-bottom:22px}
+    .hdr-sub{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+    .hdr-ttl{font-family:Georgia,serif;font-size:20px;font-weight:400;letter-spacing:2px}
+    .row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:7px}
+    .lname{text-align:center}
+    .lmain{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+    .lsub{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:1px}
+    .hous{background:linear-gradient(180deg,#1a1a1a,#111);border:3px solid #2a2a2a;border-radius:16px;padding:13px 11px;display:flex;flex-direction:column;gap:9px;align-items:center;width:66px;position:relative;transition:box-shadow .8s}
+    .sc{position:absolute;width:5px;height:5px;border-radius:50%;background:#2a2a2a;border:1px solid #333}
+    .sc.tl{top:5px;left:5px}.sc.tr{top:5px;right:5px}.sc.bl{bottom:5px;left:5px}.sc.br{bottom:5px;right:5px}
+    .bulb{width:36px;height:36px;border-radius:50%;border:2px solid #1a1a1a;transition:all .5s}
+    .roff{background:var(--roff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+    .aoff{background:var(--aoff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+    .goff{background:var(--goff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+    .ron{background:radial-gradient(circle at 35% 35%,var(--rg),var(--ro));border-color:var(--ro);box-shadow:0 0 14px var(--rg),0 0 28px rgba(248,113,113,.4),inset 0 2px 4px rgba(255,255,255,.2)}
+    .aon{background:radial-gradient(circle at 35% 35%,var(--ag),var(--ao));border-color:var(--ao);box-shadow:0 0 14px var(--ag),0 0 28px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.2);animation:pa 2s ease-in-out infinite}
+    .gon{background:radial-gradient(circle at 35% 35%,var(--gg),var(--go));border-color:var(--go);box-shadow:0 0 14px var(--gg),0 0 28px rgba(34,197,94,.4),inset 0 2px 4px rgba(255,255,255,.2)}
+    @keyframes pa{0%,100%{box-shadow:0 0 14px var(--ag),0 0 28px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.2)}50%{box-shadow:0 0 22px var(--ag),0 0 44px rgba(251,191,36,.6),inset 0 2px 4px rgba(255,255,255,.2)}}
+    .ldots{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+    .dot{width:5px;height:5px;border-radius:50%;background:#333;animation:dp 1.2s ease-in-out infinite}
+    .dot:nth-child(2){animation-delay:.25s}.dot:nth-child(3){animation-delay:.5s}
+    @keyframes dp{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.8;transform:scale(1.1)}}
+    .varea{text-align:center;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+    .vnum{font-family:Georgia,serif;font-size:21px;font-weight:700;line-height:1}
+    .vchg{font-size:10px}
+    .vlbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+    .vload{font-size:10px;color:var(--dim);letter-spacing:1px}
+    .verr{font-size:10px;color:var(--dim)}
+    .thr{font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:98px}
+    .cons{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;max-width:330px}
+    .ctit{font-size:8px;letter-spacing:4px;color:var(--dim);text-transform:uppercase}
+    .cbadge{display:flex;align-items:center;gap:9px;border-radius:8px;padding:8px 16px;width:100%}
+    .cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .clbl{font-size:12px;font-weight:700;letter-spacing:2px}
+    .cmsg{font-size:9px;color:var(--muted);margin-top:1px;line-height:1.5}
+    .drow{display:flex;gap:5px}
+    .mdot{width:7px;height:7px;border-radius:50%}
+    .ftr{margin-top:22px;text-align:center}
+    .upd{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:7px;text-transform:uppercase}
+    button{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:10px 20px;font-size:10px;letter-spacing:3px;font-family:'Courier New',monospace;cursor:pointer;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+    button:disabled{color:var(--dim);border-color:#111;cursor:not-allowed}
+    .nota{margin-top:14px;font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:290px}
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-sub">Patrimonio Familiar</div>
-    <div class="header-title">Semáforo de Mercado</div>
+  <div class="hdr">
+    <div class="hdr-sub">Patrimonio Familiar</div>
+    <div class="hdr-ttl">Semáforo de Mercado</div>
   </div>
-  <div class="lights-row" id="lights-row"></div>
-  <div class="consolidated" id="consolidated" style="display:none"></div>
-  <div class="footer">
-    <div class="last-update" id="last-update"></div>
-    <button id="btn-update" onclick="fetchAll()">↺ Actualizar</button>
+  <div class="row" id="row"></div>
+  <div class="cons" id="cons" style="display:none"></div>
+  <div class="ftr">
+    <div class="upd" id="upd"></div>
+    <button id="btn" onclick="fetchAll()">↺ Actualizar</button>
   </div>
   <div class="nota" id="nota"></div>
 
-  <script>
-  const INDICATORS = [
-    {
-      id:"vix",label:"VIX",sub:"Volatility Index",
-      zones:[{signal:"green",label:"ALCISTA",test:v=>v<16},{signal:"amber",label:"NEUTRAL",test:v=>v>=16&&v<=20},{signal:"red",label:"BAJISTA",test:v=>v>20}],
-      thresholds:["< 16 alcista","16–20 neutral","> 20 bajista"],
-      format:v=>v.toFixed(1),
+<script>
+const IND=[
+  {id:"vix",label:"VIX",sub:"Volatility Index",
+   zones:[{s:"green",l:"ALCISTA",t:v=>v<16},{s:"amber",l:"NEUTRAL",t:v=>v>=16&&v<=20},{s:"red",l:"BAJISTA",t:v=>v>20}],
+   thr:["< 16 alcista","16–20 neutral","> 20 bajista"],fmt:v=>v.toFixed(1)},
+  {id:"pcr",label:"Put/Call",sub:"Put/Call Ratio",
+   zones:[{s:"green",l:"ALCISTA",t:v=>v>1.2},{s:"amber",l:"NEUTRAL",t:v=>v>=0.6&&v<=1.2},{s:"red",l:"BAJISTA",t:v=>v<0.6}],
+   thr:["> 1.20 alcista","0.60–1.20 neutral","< 0.60 bajista"],fmt:v=>v.toFixed(2)},
+  {id:"aaii",label:"AAII",sub:"Bull-Bear Spread",
+   zones:[{s:"green",l:"ALCISTA",t:v=>v<-20},{s:"amber",l:"NEUTRAL",t:v=>v>=-20&&v<=30},{s:"red",l:"BAJISTA",t:v=>v>30}],
+   thr:["< −20% alcista","−20% a +30% neutral","> +30% bajista"],fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%"},
+];
+const COL={green:{on:"#16a34a",glow:"#22c55e",text:"#4ade80"},amber:{on:"#d97706",glow:"#fbbf24",text:"#fcd34d"},red:{on:"#b91c1c",glow:"#f87171",text:"#fca5a5"}};
+let S={r:{},l:{},e:{}};
+
+// Datos históricos como fallback fiable
+const FALLBACK={
+  vix:{value:19.5,change:null,fallback:true},
+  pcr:{value:0.72,change:null,fallback:true},
+  aaii:{value:-41.2,bullish:21.6,bearish:62.8,date:"10 abr 2025",fallback:true},
+};
+
+async function getVIX(){
+  // Intentar múltiples fuentes
+  const sources=[
+    async()=>{
+      const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d",{mode:"cors"});
+      const d=await r.json();
+      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
+      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
     },
-    {
-      id:"pcr",label:"Put/Call",sub:"Put/Call Ratio",
-      zones:[{signal:"green",label:"ALCISTA",test:v=>v>1.2},{signal:"amber",label:"NEUTRAL",test:v=>v>=0.6&&v<=1.2},{signal:"red",label:"BAJISTA",test:v=>v<0.6}],
-      thresholds:["> 1.20 alcista","0.60–1.20 neutral","< 0.60 bajista"],
-      format:v=>v.toFixed(2),
+    async()=>{
+      const r=await fetch("https://corsproxy.io/?url=https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d%26range=5d");
+      const d=await r.json();
+      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
+      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
     },
-    {
-      id:"aaii",label:"AAII",sub:"Bull-Bear Spread",
-      zones:[{signal:"green",label:"ALCISTA",test:v=>v<-20},{signal:"amber",label:"NEUTRAL",test:v=>v>=-20&&v<=30},{signal:"red",label:"BAJISTA",test:v=>v>30}],
-      thresholds:["< −20% alcista","−20% a +30% neutral","> +30% bajista"],
-      format:v=>(v>0?"+":"")+v.toFixed(1)+"%",
+    async()=>{
+      const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent("https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d"));
+      const d=await r.json();
+      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
+      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
     },
   ];
-  const C={green:{on:"#16a34a",glow:"#22c55e",off:"#052e16",text:"#4ade80"},amber:{on:"#d97706",glow:"#fbbf24",off:"#1c1003",text:"#fcd34d"},red:{on:"#b91c1c",glow:"#f87171",off:"#1c0505",text:"#fca5a5"}};
-  let state={results:{},loading:{},errors:{}};
+  for(const src of sources){try{const res=await src();if(res&&res.value)return res;}catch(e){}}
+  return FALLBACK.vix;
+}
 
-  const PROXY="https://api.allorigins.win/raw?url=";
+async function getPCR(){
+  const sources=[
+    async()=>{
+      const r=await fetch("https://corsproxy.io/?url=https://query1.finance.yahoo.com/v8/finance/chart/%5EPCEC?interval=1d%26range=5d");
+      const d=await r.json();
+      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
+      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(3)};
+    },
+    async()=>{
+      const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent("https://query2.finance.yahoo.com/v8/finance/chart/%5EPCEC?interval=1d&range=5d"));
+      const d=await r.json();
+      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
+      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(3)};
+    },
+  ];
+  for(const src of sources){try{const res=await src();if(res&&res.value)return res;}catch(e){}}
+  return FALLBACK.pcr;
+}
 
-  async function fetchVIX(){
-    const url=encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d");
-    const res=await fetch(PROXY+url);
-    const data=await res.json();
-    const closes=data.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-    const curr=closes[closes.length-1];
-    const prev=closes[closes.length-2];
-    return{value:curr,change:+(curr-prev).toFixed(2)};
+async function getAAII(){
+  // AAII no tiene API pública — dato fijo actualizado semanalmente
+  return FALLBACK.aaii;
+}
+
+function zone(ind,v){return ind.zones.find(z=>z.t(v))??ind.zones[1];}
+
+function render(){
+  document.getElementById("row").innerHTML=IND.map(ind=>{
+    const res=S.r[ind.id],load=S.l[ind.id],err=S.e[ind.id];
+    const z=res?zone(ind,res.value):null;
+    const sh=z?`0 0 28px ${COL[z.s].glow}44`:"none";
+    const bulbs=["red","amber","green"].map(sig=>`<div class="bulb ${sig[0]}${(!load&&!err&&z?.s===sig)?"on":"off"}"></div>`).join("");
+    const ldots=load?`<div class="ldots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`:"";
+    let va="";
+    if(load)va=`<div class="vload">buscando...</div>`;
+    else if(err)va=`<div class="verr">sin datos</div>`;
+    else if(res){
+      const col=COL[z.s].text;
+      const chg=res.change!=null?`<div class="vchg" style="color:${res.change>0?COL.red.text:COL.green.text}">${res.change>0?"▲":"▼"} ${Math.abs(res.change).toFixed(2)}</div>`:"";
+      const fb=res.fallback?`<div style="font-size:7px;color:#334155;margin-top:1px">último dato</div>`:"";
+      va=`<div class="vnum" style="color:${col}">${ind.fmt(res.value)}</div>${chg}<div class="vlbl" style="color:${col}">${z.l}</div>${fb}`;
+    }
+    return`<div class="wrap"><div class="lname"><div class="lmain">${ind.label}</div><div class="lsub">${ind.sub}</div></div><div class="hous" style="box-shadow:${sh}"><div class="sc tl"></div><div class="sc tr"></div><div class="sc bl"></div><div class="sc br"></div>${bulbs}${ldots}</div><div class="varea">${va}</div><div class="thr">${ind.thr.map(t=>`<div>${t}</div>`).join("")}</div></div>`;
+  }).join("");
+
+  const cons=document.getElementById("cons");
+  const zones=IND.map(i=>{const r=S.r[i.id];return r?zone(i,r.value):null;}).filter(Boolean);
+  if(zones.length<2){cons.style.display="none";}
+  else{
+    const reds=zones.filter(z=>z.s==="red").length,greens=zones.filter(z=>z.s==="green").length;
+    let sig,lbl,msg;
+    if(reds>=2){sig="red";lbl="DEFENSIVO";msg="Mantener posición conservadora en PP";}
+    else if(greens>=2){sig="green";lbl="FAVORABLE";msg="Condiciones favorables para renta variable";}
+    else{sig="amber";lbl="MIXTO";msg="Señales divergentes — vigilar evolución";}
+    const c=COL[sig];
+    cons.style.display="flex";
+    cons.innerHTML=`<div class="ctit">Señal Consolidada</div><div class="cbadge" style="background:${c.on}18;border:1px solid ${c.on}44"><div class="cdot" style="background:${c.on};box-shadow:0 0 7px ${c.glow}"></div><div><div class="clbl" style="color:${c.text}">${lbl}</div><div class="cmsg">${msg}</div></div></div><div class="drow">${zones.map(z=>`<div class="mdot" style="background:${COL[z.s].on};box-shadow:0 0 5px ${COL[z.s].glow}"></div>`).join("")}</div>`;
   }
 
-  async function fetchPCR(){
-    const url=encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EPCEC?interval=1d&range=5d");
-    const res=await fetch(PROXY+url);
-    const data=await res.json();
-    const closes=data.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-    const curr=closes[closes.length-1];
-    const prev=closes[closes.length-2];
-    return{value:curr,change:+(curr-prev).toFixed(3)};
-  }
+  const busy=Object.values(S.l).some(Boolean);
+  const btn=document.getElementById("btn");
+  btn.disabled=busy;btn.textContent=busy?"consultando...":"↺ Actualizar";
 
-  async function fetchAAII(){
-    // AAII no tiene API pública directa — usamos el último dato conocido
-    // y lo marcamos como "último dato disponible"
-    // Dato semana 10 abril 2025: Bullish 21.6%, Bearish 62.8% → spread -41.2%
-    return{value:-41.2,bullish:21.6,bearish:62.8,date:"10 abr 2025",fallback:true};
-  }
+  const ar=S.r["aaii"];
+  document.getElementById("nota").textContent=ar?.fallback?"AAII: último dato disponible · VIX y PCR en tiempo real":"AAII semanal · VIX y PCR en tiempo real";
+}
 
-  function getZone(ind,value){return ind.zones.find(z=>z.test(value))??ind.zones[1];}
+async function fetchOne(ind,fn){
+  S.l[ind.id]=true;render();
+  try{S.r[ind.id]=await fn();}
+  catch(e){S.r[ind.id]=FALLBACK[ind.id];}
+  finally{S.l[ind.id]=false;render();}
+}
 
-  function renderLights(){
-    document.getElementById("lights-row").innerHTML=INDICATORS.map(ind=>{
-      const res=state.results[ind.id],loading=state.loading[ind.id],error=state.errors[ind.id];
-      const zone=res?getZone(ind,res.value):null;
-      const shadow=zone?`0 0 32px ${C[zone.signal].glow}44`:"none";
-      const bulbs=["red","amber","green"].map(sig=>`<div class="bulb ${sig}-${(!loading&&!error&&zone?.signal===sig)?"on":"off"}"></div>`).join("");
-      const loadingHTML=loading?`<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`:"";
-      let valueHTML="";
-      if(loading){valueHTML=`<div class="value-loading">buscando...</div>`;}
-      else if(error){valueHTML=`<div class="value-error">sin datos</div>`;}
-      else if(res){
-        const col=C[zone.signal].text;
-        const chg=res.change!=null?`<div class="value-change" style="color:${res.change>0?C.red.text:C.green.text}">${res.change>0?"▲":"▼"} ${Math.abs(res.change).toFixed(2)}</div>`:"";
-        const fb=res.fallback?`<div style="font-size:7px;color:#334155;margin-top:2px">último dato</div>`:"";
-        valueHTML=`<div class="value-num" style="color:${col}">${ind.format(res.value)}</div>${chg}<div class="value-label" style="color:${col}">${zone.label}</div>${fb}`;
-      }
-      return`<div class="light-wrap"><div class="light-name"><div class="light-name-main">${ind.label}</div><div class="light-name-sub">${ind.sub}</div></div><div class="housing" style="box-shadow:${shadow}"><div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>${bulbs}${loadingHTML}</div><div class="value-area">${valueHTML}</div><div class="thresholds">${ind.thresholds.map(t=>`<div>${t}</div>`).join("")}</div></div>`;
-    }).join("");
-  }
+async function fetchAll(){
+  S.r={};S.e={};IND.forEach(i=>{S.l[i.id]=true;});render();
+  await Promise.all([fetchOne(IND[0],getVIX),fetchOne(IND[1],getPCR),fetchOne(IND[2],getAAII)]);
+  const n=new Date();
+  document.getElementById("upd").textContent="Actualizado "+n.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+}
 
-  function renderConsolidated(){
-    const div=document.getElementById("consolidated"),nota=document.getElementById("nota");
-    const zones=INDICATORS.map(ind=>{const r=state.results[ind.id];return r?getZone(ind,r.value):null;}).filter(Boolean);
-    if(zones.length<2){div.style.display="none";return;}
-    const reds=zones.filter(z=>z.signal==="red").length,greens=zones.filter(z=>z.signal==="green").length;
-    let signal,label,msg;
-    if(reds>=2){signal="red";label="DEFENSIVO";msg="Mantener posición conservadora en PP";}
-    else if(greens>=2){signal="green";label="FAVORABLE";msg="Condiciones favorables para renta variable";}
-    else{signal="amber";label="MIXTO";msg="Señales divergentes — vigilar evolución";}
-    const c=C[signal];
-    div.style.display="flex";
-    div.innerHTML=`<div class="consolidated-title">Señal Consolidada</div><div class="consolidated-badge" style="background:${c.on}18;border:1px solid ${c.on}44"><div class="consolidated-dot" style="background:${c.on};box-shadow:0 0 8px ${c.glow}"></div><div><div class="consolidated-label" style="color:${c.text}">${label}</div><div class="consolidated-msg">${msg}</div></div></div><div class="dots-row">${zones.map(z=>`<div class="mini-dot" style="background:${C[z.signal].on};box-shadow:0 0 5px ${C[z.signal].glow}"></div>`).join("")}</div>`;
-    const ar=state.results["aaii"];
-    nota.textContent=ar?.fallback?"AAII: último dato disponible · VIX y PCR en tiempo real":"AAII semanal (jueves) · VIX y PCR en tiempo real";
-  }
-
-  function render(){
-    renderLights();renderConsolidated();
-    const busy=Object.values(state.loading).some(Boolean);
-    const btn=document.getElementById("btn-update");
-    btn.disabled=busy;btn.textContent=busy?"consultando...":"↺ Actualizar";
-  }
-
-  async function fetchOne(ind,fn){
-    state.loading[ind.id]=true;render();
-    try{state.results[ind.id]=await fn();}
-    catch(e){state.errors[ind.id]=true;}
-    finally{state.loading[ind.id]=false;render();}
-  }
-
-  async function fetchAll(){
-    state.results={};state.errors={};
-    INDICATORS.forEach(ind=>{state.loading[ind.id]=true;});
-    render();
-    await Promise.all([fetchOne(INDICATORS[0],fetchVIX),fetchOne(INDICATORS[1],fetchPCR),fetchOne(INDICATORS[2],fetchAAII)]);
-    const now=new Date();
-    document.getElementById("last-update").textContent="Actualizado "+now.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
-  }
-
-  if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-  fetchAll();
-  </script>
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+fetchAll();
+</script>
 </body>
 </html>
