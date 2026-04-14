@@ -1,214 +1,251 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0a0a0f"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Semáforo"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-  <title>Semáforo de Mercado</title>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --bg:#0a0a0f;--border:#1e293b;--text:#cbd5e1;--muted:#475569;--dim:#1e293b;
-      --go:#16a34a;--gg:#22c55e;--goff:#052e16;--gt:#4ade80;
-      --ao:#d97706;--ag:#fbbf24;--aoff:#1c1003;--at:#fcd34d;
-      --ro:#b91c1c;--rg:#f87171;--roff:#1c0505;--rt:#fca5a5;
-    }
-    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;-webkit-font-smoothing:antialiased}
-    body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:max(env(safe-area-inset-top),28px) 20px 28px;background-image:radial-gradient(ellipse at 50% 0%,#0d1117,var(--bg) 70%)}
-    .hdr{text-align:center;margin-bottom:22px}
-    .hdr-sub{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
-    .hdr-ttl{font-family:Georgia,serif;font-size:20px;font-weight:400;letter-spacing:2px}
-    .row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
-    .wrap{display:flex;flex-direction:column;align-items:center;gap:7px}
-    .lname{text-align:center}
-    .lmain{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
-    .lsub{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:1px}
-    .hous{background:linear-gradient(180deg,#1a1a1a,#111);border:3px solid #2a2a2a;border-radius:16px;padding:13px 11px;display:flex;flex-direction:column;gap:9px;align-items:center;width:66px;position:relative;transition:box-shadow .8s}
-    .sc{position:absolute;width:5px;height:5px;border-radius:50%;background:#2a2a2a;border:1px solid #333}
-    .sc.tl{top:5px;left:5px}.sc.tr{top:5px;right:5px}.sc.bl{bottom:5px;left:5px}.sc.br{bottom:5px;right:5px}
-    .bulb{width:36px;height:36px;border-radius:50%;border:2px solid #1a1a1a;transition:all .5s}
-    .roff{background:var(--roff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
-    .aoff{background:var(--aoff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
-    .goff{background:var(--goff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
-    .ron{background:radial-gradient(circle at 35% 35%,var(--rg),var(--ro));border-color:var(--ro);box-shadow:0 0 14px var(--rg),0 0 28px rgba(248,113,113,.4),inset 0 2px 4px rgba(255,255,255,.2)}
-    .aon{background:radial-gradient(circle at 35% 35%,var(--ag),var(--ao));border-color:var(--ao);box-shadow:0 0 14px var(--ag),0 0 28px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.2);animation:pa 2s ease-in-out infinite}
-    .gon{background:radial-gradient(circle at 35% 35%,var(--gg),var(--go));border-color:var(--go);box-shadow:0 0 14px var(--gg),0 0 28px rgba(34,197,94,.4),inset 0 2px 4px rgba(255,255,255,.2)}
-    @keyframes pa{0%,100%{box-shadow:0 0 14px var(--ag),0 0 28px rgba(251,191,36,.4),inset 0 2px 4px rgba(255,255,255,.2)}50%{box-shadow:0 0 22px var(--ag),0 0 44px rgba(251,191,36,.6),inset 0 2px 4px rgba(255,255,255,.2)}}
-    .ldots{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-    .dot{width:5px;height:5px;border-radius:50%;background:#333;animation:dp 1.2s ease-in-out infinite}
-    .dot:nth-child(2){animation-delay:.25s}.dot:nth-child(3){animation-delay:.5s}
-    @keyframes dp{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.8;transform:scale(1.1)}}
-    .varea{text-align:center;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-    .vnum{font-family:Georgia,serif;font-size:21px;font-weight:700;line-height:1}
-    .vchg{font-size:10px}
-    .vlbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:2px}
-    .vload{font-size:10px;color:var(--dim);letter-spacing:1px}
-    .verr{font-size:10px;color:var(--dim)}
-    .thr{font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:98px}
-    .cons{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;max-width:330px}
-    .ctit{font-size:8px;letter-spacing:4px;color:var(--dim);text-transform:uppercase}
-    .cbadge{display:flex;align-items:center;gap:9px;border-radius:8px;padding:8px 16px;width:100%}
-    .cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .clbl{font-size:12px;font-weight:700;letter-spacing:2px}
-    .cmsg{font-size:9px;color:var(--muted);margin-top:1px;line-height:1.5}
-    .drow{display:flex;gap:5px}
-    .mdot{width:7px;height:7px;border-radius:50%}
-    .ftr{margin-top:22px;text-align:center}
-    .upd{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:7px;text-transform:uppercase}
-    button{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:10px 20px;font-size:10px;letter-spacing:3px;font-family:'Courier New',monospace;cursor:pointer;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
-    button:disabled{color:var(--dim);border-color:#111;cursor:not-allowed}
-    .nota{margin-top:14px;font-size:8px;color:#1e3a5f;text-align:center;line-height:1.8;max-width:290px}
-  </style>
-</head>
-<body>
-  <div class="hdr">
-    <div class="hdr-sub">Patrimonio Familiar</div>
-    <div class="hdr-ttl">Semáforo de Mercado</div>
-  </div>
-  <div class="row" id="row"></div>
-  <div class="cons" id="cons" style="display:none"></div>
-  <div class="ftr">
-    <div class="upd" id="upd"></div>
-    <button id="btn" onclick="fetchAll()">↺ Actualizar</button>
-  </div>
-  <div class="nota" id="nota"></div>
+import { useState, useEffect, useRef } from "react";
 
-<script>
-const IND=[
-  {id:"vix",label:"VIX",sub:"Volatility Index",
-   zones:[{s:"green",l:"ALCISTA",t:v=>v<16},{s:"amber",l:"NEUTRAL",t:v=>v>=16&&v<=20},{s:"red",l:"BAJISTA",t:v=>v>20}],
-   thr:["< 16 alcista","16–20 neutral","> 20 bajista"],fmt:v=>v.toFixed(1)},
-  {id:"pcr",label:"Put/Call",sub:"Put/Call Ratio",
-   zones:[{s:"green",l:"ALCISTA",t:v=>v>1.2},{s:"amber",l:"NEUTRAL",t:v=>v>=0.6&&v<=1.2},{s:"red",l:"BAJISTA",t:v=>v<0.6}],
-   thr:["> 1.20 alcista","0.60–1.20 neutral","< 0.60 bajista"],fmt:v=>v.toFixed(2)},
-  {id:"aaii",label:"AAII",sub:"Bull-Bear Spread",
-   zones:[{s:"green",l:"ALCISTA",t:v=>v<-20},{s:"amber",l:"NEUTRAL",t:v=>v>=-20&&v<=30},{s:"red",l:"BAJISTA",t:v=>v>30}],
-   thr:["< −20% alcista","−20% a +30% neutral","> +30% bajista"],fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%"},
+const INDICATORS = [
+  {
+    id: "vix", name: "VIX", group: "vol-usa", label: "Volatilidad USA",
+    thresholds: "< 16 | 16–20 | > 20",
+    signal: v => v < 16 ? "GREEN" : v <= 20 ? "AMBER" : "RED",
+    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VIX (CBOE Volatility Index, ^VIX). Responde SOLO con JSON sin texto ni backticks: {"value": 18.5, "note": ""}`
+  },
+  {
+    id: "vstoxx", name: "VSTOXX", group: "vol-eu", label: "Volatilidad Europa",
+    thresholds: "< 18 | 18–25 | > 25",
+    signal: v => v < 18 ? "GREEN" : v <= 25 ? "AMBER" : "RED",
+    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VSTOXX (V2TX, Euro Stoxx 50 Volatility). Responde SOLO con JSON: {"value": 22.0, "note": ""}`
+  },
+  {
+    id: "vxefa", name: "VXEFA", group: "vol-eu", label: "Vol. Desa. ex-USA",
+    thresholds: "< 17 | 17–23 | > 23",
+    signal: v => v < 17 ? "GREEN" : v <= 23 ? "AMBER" : "RED",
+    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VXEFA (CBOE EFA ETF Volatility Index). Responde SOLO con JSON: {"value": 20.0, "note": ""}`
+  },
+  {
+    id: "vxeem", name: "VXEEM", group: "vol-em", label: "Vol. Emergentes",
+    thresholds: "< 20 | 20–28 | > 28",
+    inverted: true,
+    signal: v => v < 20 ? "GREEN" : v <= 28 ? "AMBER" : "RED",
+    sigLabel: { GREEN: "VIGILANCIA ⚠", AMBER: "NEUTRO", RED: "OPORTUNIDAD EM" },
+    prompt: `Busca el valor actual del VXEEM (CBOE Emerging Markets Volatility). Responde SOLO con JSON: {"value": 25.0, "note": ""}`
+  },
+  {
+    id: "pcr", name: "PUT/CALL", group: "sent", label: "Sentimiento",
+    thresholds: "> 1.20 alcista | < 0.60 bajista",
+    signal: v => v > 1.20 ? "GREEN" : v < 0.60 ? "RED" : "AMBER",
+    sigLabel: { GREEN: "MIEDO/ALCISTA", AMBER: "NEUTRAL", RED: "EUFORIA/BAJISTA" },
+    prompt: `Busca el CBOE Total Put/Call Ratio actual. Responde SOLO con JSON: {"value": 0.95, "note": ""}`
+  },
+  {
+    id: "aaii", name: "AAII SPREAD", group: "sent", label: "Sentimiento",
+    thresholds: "< −20% alcista | > +30% bajista",
+    signal: v => v < -20 ? "GREEN" : v > 30 ? "RED" : "AMBER",
+    sigLabel: { GREEN: "PESIMISMO/ALCISTA", AMBER: "NEUTRAL", RED: "OPTIMISMO/BAJISTA" },
+    prompt: `Busca el último AAII Bull-Bear Spread semanal (% Bullish minus % Bearish). Responde SOLO con JSON: {"value": -15.2, "note": "sem dd/mm"}`
+  }
 ];
-const COL={green:{on:"#16a34a",glow:"#22c55e",text:"#4ade80"},amber:{on:"#d97706",glow:"#fbbf24",text:"#fcd34d"},red:{on:"#b91c1c",glow:"#f87171",text:"#fca5a5"}};
-let S={r:{},l:{},e:{}};
 
-// Datos históricos como fallback fiable
-const FALLBACK={
-  vix:{value:22.43,change:-4.76,fallback:true},
-  pcr:{value:0.51,change:null,fallback:true},
-  aaii:{value:-27.0,bullish:35.7,bearish:62.7,date:"10 abr 2026",fallback:true},
+const C = {
+  bg: "#080c12", surface: "#0d1117", border: "#1e293b",
+  text: "#cbd5e1", muted: "#475569", dim: "#1e293b",
+  GREEN: { bg: "#040f08", border: "#16a34a", text: "#4ade80", label: "#22c55e" },
+  AMBER: { bg: "#0c0800", border: "#b45309", text: "#fcd34d", label: "#f59e0b" },
+  RED:   { bg: "#0c0404", border: "#b91c1c", text: "#fca5a5", label: "#ef4444" },
+  LOADING: { bg: "#0d1117", border: "#1e293b", text: "#1e293b", label: "#253350" }
 };
 
-async function getVIX(){
-  // Intentar múltiples fuentes
-  const sources=[
-    async()=>{
-      const r=await fetch("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d",{mode:"cors"});
-      const d=await r.json();
-      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
-    },
-    async()=>{
-      const r=await fetch("https://corsproxy.io/?url=https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d%26range=5d");
-      const d=await r.json();
-      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
-    },
-    async()=>{
-      const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent("https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d"));
-      const d=await r.json();
-      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(2)};
-    },
-  ];
-  for(const src of sources){try{const res=await src();if(res&&res.value)return res;}catch(e){}}
-  return FALLBACK.vix;
+function sigColor(sig) { return (C[sig] || C.LOADING).label; }
+
+function calcGlobal(results) {
+  const mainIds = ["vix","vstoxx","vxefa","pcr","aaii"];
+  const sigs = mainIds.map(id => results[id]?._sig).filter(Boolean);
+  if (sigs.length < 3) return "LOADING";
+  const reds = sigs.filter(s => s === "RED").length;
+  const greens = sigs.filter(s => s === "GREEN").length;
+  if (reds >= 3) return "RED";
+  if (greens >= 3) return "GREEN";
+  return "AMBER";
 }
 
-async function getPCR(){
-  const sources=[
-    async()=>{
-      const r=await fetch("https://corsproxy.io/?url=https://query1.finance.yahoo.com/v8/finance/chart/%5EPCEC?interval=1d%26range=5d");
-      const d=await r.json();
-      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(3)};
-    },
-    async()=>{
-      const r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent("https://query2.finance.yahoo.com/v8/finance/chart/%5EPCEC?interval=1d&range=5d"));
-      const d=await r.json();
-      const c=d.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
-      return{value:c[c.length-1],change:+(c[c.length-1]-c[c.length-2]).toFixed(3)};
-    },
-  ];
-  for(const src of sources){try{const res=await src();if(res&&res.value)return res;}catch(e){}}
-  return FALLBACK.pcr;
+const GLOBAL_DESC = {
+  GREEN: "Condiciones favorables — posición en renta variable",
+  AMBER: "Señales mixtas — mantener con vigilancia",
+  RED: "Estrés elevado — posición defensiva recomendada",
+  LOADING: "Consultando indicadores..."
+};
+
+function Card({ ind, result, loading, error }) {
+  const sig = result ? ind.signal(result.value) : (loading ? "LOADING" : "LOADING");
+  if (result) result._sig = sig;
+  const col = C[sig] || C.LOADING;
+  const valueStr = result ? String(result.value) : (loading ? "···" : "—");
+
+  return (
+    <div style={{
+      background: col.bg, border: `1px solid ${col.border}`,
+      borderRadius: 8, padding: "12px 14px",
+      display: "flex", flexDirection: "column", gap: 5,
+      transition: "all .4s"
+    }}>
+      <div style={{ fontSize: 8, letterSpacing: 3, color: C.muted }}>{ind.name}</div>
+      <div style={{
+        fontSize: 22, fontFamily: "Georgia, serif", color: "#e2e8f0", lineHeight: 1,
+        opacity: loading ? 0.3 : 1,
+        animation: loading ? "pulse 1.4s infinite" : "none"
+      }}>{valueStr}</div>
+      <div style={{ fontSize: 9, letterSpacing: 2, fontWeight: 700, color: col.text }}>
+        {result ? ind.sigLabel[sig] : (loading ? "···" : "—")}
+      </div>
+      <div style={{ fontSize: 8, color: "#253350" }}>{ind.thresholds}</div>
+      {result?.note && <div style={{ fontSize: 8, color: "#334155", fontStyle: "italic" }}>{result.note}</div>}
+      {ind.inverted && <div style={{ fontSize: 8, color: "#334155", fontStyle: "italic" }}>⚠ lógica invertida EM</div>}
+    </div>
+  );
 }
 
-async function getAAII(){
-  // AAII no tiene API pública — dato fijo actualizado semanalmente
-  return FALLBACK.aaii;
+function SectionTitle({ label }) {
+  return (
+    <div style={{
+      fontSize: 8, letterSpacing: 4, color: "#253350", textTransform: "uppercase",
+      borderLeft: "2px solid #1e293b", paddingLeft: 8, marginBottom: 8, marginTop: 4
+    }}>{label}</div>
+  );
 }
 
-function zone(ind,v){return ind.zones.find(z=>z.t(v))??ind.zones[1];}
+export default function App() {
+  const [results, setResults] = useState({});
+  const [loading, setLoading] = useState({});
+  const [errors, setErrors] = useState({});
+  const [lastUpdate, setLastUpdate] = useState(null);
 
-function render(){
-  document.getElementById("row").innerHTML=IND.map(ind=>{
-    const res=S.r[ind.id],load=S.l[ind.id],err=S.e[ind.id];
-    const z=res?zone(ind,res.value):null;
-    const sh=z?`0 0 28px ${COL[z.s].glow}44`:"none";
-    const bulbs=["red","amber","green"].map(sig=>`<div class="bulb ${sig[0]}${(!load&&!err&&z?.s===sig)?"on":"off"}"></div>`).join("");
-    const ldots=load?`<div class="ldots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`:"";
-    let va="";
-    if(load)va=`<div class="vload">buscando...</div>`;
-    else if(err)va=`<div class="verr">sin datos</div>`;
-    else if(res){
-      const col=COL[z.s].text;
-      const chg=res.change!=null?`<div class="vchg" style="color:${res.change>0?COL.red.text:COL.green.text}">${res.change>0?"▲":"▼"} ${Math.abs(res.change).toFixed(2)}</div>`:"";
-      const fb=res.fallback?`<div style="font-size:7px;color:#334155;margin-top:1px">último dato</div>`:"";
-      va=`<div class="vnum" style="color:${col}">${ind.fmt(res.value)}</div>${chg}<div class="vlbl" style="color:${col}">${z.l}</div>${fb}`;
+  const fetchOne = async (ind) => {
+    setLoading(p => ({ ...p, [ind.id]: true }));
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          messages: [{ role: "user", content: ind.prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+      const match = text.match(/\{[^}]*"value"\s*:\s*-?[\d.]+[^}]*\}/);
+      if (!match) throw new Error("no json");
+      const parsed = JSON.parse(match[0]);
+      if (typeof parsed.value !== "number") throw new Error("bad value");
+      setResults(p => ({ ...p, [ind.id]: parsed }));
+      setErrors(p => ({ ...p, [ind.id]: false }));
+    } catch {
+      setErrors(p => ({ ...p, [ind.id]: true }));
+      setResults(p => { const n = { ...p }; delete n[ind.id]; return n; });
+    } finally {
+      setLoading(p => ({ ...p, [ind.id]: false }));
     }
-    return`<div class="wrap"><div class="lname"><div class="lmain">${ind.label}</div><div class="lsub">${ind.sub}</div></div><div class="hous" style="box-shadow:${sh}"><div class="sc tl"></div><div class="sc tr"></div><div class="sc bl"></div><div class="sc br"></div>${bulbs}${ldots}</div><div class="varea">${va}</div><div class="thr">${ind.thr.map(t=>`<div>${t}</div>`).join("")}</div></div>`;
-  }).join("");
+  };
 
-  const cons=document.getElementById("cons");
-  const zones=IND.map(i=>{const r=S.r[i.id];return r?zone(i,r.value):null;}).filter(Boolean);
-  if(zones.length<2){cons.style.display="none";}
-  else{
-    const reds=zones.filter(z=>z.s==="red").length,greens=zones.filter(z=>z.s==="green").length;
-    let sig,lbl,msg;
-    if(reds>=2){sig="red";lbl="DEFENSIVO";msg="Mantener posición conservadora en PP";}
-    else if(greens>=2){sig="green";lbl="FAVORABLE";msg="Condiciones favorables para renta variable";}
-    else{sig="amber";lbl="MIXTO";msg="Señales divergentes — vigilar evolución";}
-    const c=COL[sig];
-    cons.style.display="flex";
-    cons.innerHTML=`<div class="ctit">Señal Consolidada</div><div class="cbadge" style="background:${c.on}18;border:1px solid ${c.on}44"><div class="cdot" style="background:${c.on};box-shadow:0 0 7px ${c.glow}"></div><div><div class="clbl" style="color:${c.text}">${lbl}</div><div class="cmsg">${msg}</div></div></div><div class="drow">${zones.map(z=>`<div class="mdot" style="background:${COL[z.s].on};box-shadow:0 0 5px ${COL[z.s].glow}"></div>`).join("")}</div>`;
-  }
+  const fetchAll = async () => {
+    setResults({});
+    setErrors({});
+    const loadInit = {};
+    INDICATORS.forEach(i => { loadInit[i.id] = true; });
+    setLoading(loadInit);
+    for (let i = 0; i < INDICATORS.length; i++) {
+      setTimeout(() => fetchOne(INDICATORS[i]), i * 350);
+    }
+    const now = new Date();
+    setTimeout(() => setLastUpdate(
+      now.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" })
+    ), INDICATORS.length * 350 + 2000);
+  };
 
-  const busy=Object.values(S.l).some(Boolean);
-  const btn=document.getElementById("btn");
-  btn.disabled=busy;btn.textContent=busy?"consultando...":"↺ Actualizar";
+  useEffect(() => { fetchAll(); }, []);
 
-  const ar=S.r["aaii"];
-  document.getElementById("nota").textContent=ar?.fallback?"AAII: último dato disponible · VIX y PCR en tiempo real":"AAII semanal · VIX y PCR en tiempo real";
+  const busy = Object.values(loading).some(Boolean);
+  const globalSig = calcGlobal(results);
+  const gCol = C[globalSig] || C.LOADING;
+
+  const groups = [
+    { key: "vol-usa", title: "Volatilidad — USA" },
+    { key: "vol-eu",  title: "Volatilidad — Europa & Global Desarrollado" },
+    { key: "vol-em",  title: "Volatilidad — Emergentes" },
+    { key: "sent",    title: "Sentimiento — USA" }
+  ];
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: C.bg,
+      backgroundImage: "radial-gradient(ellipse 100% 40% at 50% 0%, #0d1829 0%, transparent 60%)",
+      padding: "28px 16px 40px", fontFamily: "'Courier New', monospace",
+      display: "flex", flexDirection: "column", alignItems: "center"
+    }}>
+      <style>{`@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.9} }`}</style>
+
+      {/* Header */}
+      <div style={{ maxWidth: 480, width: "100%", textAlign: "center", marginBottom: 20 }}>
+        <div style={{ fontSize: 8, letterSpacing: 5, color: "#1e293b", marginBottom: 5 }}>PATRIMONIO FAMILIAR · GESTIÓN PP</div>
+        <div style={{ fontSize: 18, color: "#e2e8f0", letterSpacing: 2, fontFamily: "Georgia, serif" }}>Semáforo de Mercado</div>
+        <div style={{ fontSize: 9, color: C.muted, marginTop: 4, letterSpacing: 2 }}>VIX · VSTOXX · VXEFA · VXEEM · PCR · AAII</div>
+      </div>
+
+      {/* Señal global */}
+      <div style={{
+        maxWidth: 480, width: "100%", border: `1px solid ${gCol.border}`,
+        background: gCol.bg, borderRadius: 8, padding: "16px",
+        marginBottom: 20, textAlign: "center", transition: "all .4s"
+      }}>
+        <div style={{ fontSize: 8, letterSpacing: 4, color: C.muted, marginBottom: 8 }}>SEÑAL GLOBAL CONSOLIDADA</div>
+        <div style={{ fontSize: 22, color: gCol.label, fontFamily: "Georgia, serif", letterSpacing: 3 }}>
+          {{ GREEN: "▲ VERDE — ALCISTA", AMBER: "◆ ÁMBAR — NEUTRAL", RED: "▼ ROJO — BAJISTA", LOADING: "—" }[globalSig]}
+        </div>
+        <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>{GLOBAL_DESC[globalSig]}</div>
+      </div>
+
+      {/* Grupos de indicadores */}
+      {groups.map(g => {
+        const inds = INDICATORS.filter(i => i.group === g.key);
+        return (
+          <div key={g.key} style={{ maxWidth: 480, width: "100%", marginBottom: 18 }}>
+            <SectionTitle label={g.title} />
+            <div style={{ display: "grid", gridTemplateColumns: inds.length === 1 ? "1fr" : "1fr 1fr", gap: 10 }}>
+              {inds.map(ind => (
+                <Card key={ind.id} ind={ind}
+                  result={results[ind.id]} loading={loading[ind.id]} error={errors[ind.id]} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Botón */}
+      <div style={{ maxWidth: 480, width: "100%", textAlign: "center", marginBottom: 10 }}>
+        <button disabled={busy} onClick={fetchAll} style={{
+          background: "transparent", border: `1px solid ${busy ? "#1e293b" : "#253350"}`,
+          color: busy ? "#1e293b" : "#475569",
+          padding: "10px 28px", fontFamily: "'Courier New', monospace",
+          fontSize: 9, letterSpacing: 4, textTransform: "uppercase",
+          borderRadius: 4, cursor: busy ? "not-allowed" : "pointer",
+          transition: "all .3s"
+        }}>
+          {busy ? "consultando..." : "↺ Actualizar"}
+        </button>
+      </div>
+
+      {lastUpdate && (
+        <div style={{ fontSize: 8, color: "#1e293b", letterSpacing: 2 }}>Actualizado {lastUpdate}</div>
+      )}
+
+      {/* Nota VXEEM */}
+      <div style={{ maxWidth: 480, width: "100%", marginTop: 16, borderTop: "1px solid #0f1923", paddingTop: 12 }}>
+        <div style={{ fontSize: 8, color: "#1e293b", lineHeight: 1.8 }}>
+          ⚠ VXEEM usa lógica invertida: VIX alto en EM históricamente precede recuperaciones (MSCI EM procíclico tardío). No usar como señal automática de salida.<br/>
+          Señal global basada en VIX · VSTOXX · VXEFA · PCR · AAII (mayoría de 3/5).
+        </div>
+      </div>
+    </div>
+  );
 }
-
-async function fetchOne(ind,fn){
-  S.l[ind.id]=true;render();
-  try{S.r[ind.id]=await fn();}
-  catch(e){S.r[ind.id]=FALLBACK[ind.id];}
-  finally{S.l[ind.id]=false;render();}
-}
-
-async function fetchAll(){
-  S.r={};S.e={};IND.forEach(i=>{S.l[i.id]=true;});render();
-  await Promise.all([fetchOne(IND[0],getVIX),fetchOne(IND[1],getPCR),fetchOne(IND[2],getAAII)]);
-  const n=new Date();
-  document.getElementById("upd").textContent="Actualizado "+n.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
-}
-
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-fetchAll();
-</script>
-</body>
-</html>
