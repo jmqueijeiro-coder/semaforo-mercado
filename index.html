@@ -1,251 +1,460 @@
-import { useState, useEffect, useRef } from "react";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080c12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Semáforo" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Semáforo de Mercado</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c12;
+      --surface: #0d1117;
+      --surface2: #111827;
+      --border: #1e293b;
+      --border2: #253350;
+      --text: #cbd5e1;
+      --muted: #64748b;
+      --dim: #1e293b;
+      --g: #16a34a; --g2: #22c55e; --g-bg: #052e16; --g-t: #4ade80;
+      --a: #b45309; --a2: #f59e0b; --a-bg: #1c0f03; --a-t: #fcd34d;
+      --r: #b91c1c; --r2: #ef4444; --r-bg: #1c0505; --r-t: #fca5a5;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(env(safe-area-inset-top), 28px) 16px
+               max(env(safe-area-inset-bottom), 20px);
+      background-image:
+        radial-gradient(ellipse 120% 40% at 50% 0%, #0d1829 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 80% 80%, #0a0e18 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header-label {
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: #1e293b;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 400;
+      color: #e2e8f0;
+      letter-spacing: 2px;
+      font-family: Georgia, serif;
+    }
+    .header-sub {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 2px;
+    }
+
+    /* ── SEÑAL GLOBAL ── */
+    .global-box {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 18px;
+      text-align: center;
+      transition: border-color .4s, background .4s;
+    }
+    .global-box.GREEN  { background: #05180e; border-color: var(--g2); }
+    .global-box.AMBER  { background: #150d02; border-color: var(--a2); }
+    .global-box.RED    { background: #150404; border-color: var(--r2); }
+    .global-box.LOADING{ background: var(--surface); border-color: var(--border); }
+
+    .global-label { font-size: 8px; letter-spacing: 4px; color: var(--muted); margin-bottom: 8px; }
+    .global-signal { font-size: 26px; font-weight: 700; letter-spacing: 3px; font-family: Georgia, serif; }
+    .global-signal.GREEN  { color: var(--g2); }
+    .global-signal.AMBER  { color: var(--a2); }
+    .global-signal.RED    { color: var(--r2); }
+    .global-signal.LOADING{ color: var(--muted); }
+    .global-desc { font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: 1px; }
+
+    /* ── SECCIÓN ── */
+    .section-title {
+      width: 100%;
+      max-width: 480px;
+      font-size: 8px;
+      letter-spacing: 4px;
+      color: #253350;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-left: 2px;
+      border-left: 2px solid #1e293b;
+      padding-left: 8px;
+    }
+
+    /* ── CARDS ── */
+    .cards {
+      width: 100%;
+      max-width: 480px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color .4s, background .4s;
+    }
+    .card.GREEN { background: #040f08; border-color: #16a34a; }
+    .card.AMBER { background: #0c0800; border-color: #b45309; }
+    .card.RED   { background: #0c0404; border-color: #b91c1c; }
+    .card.ERROR { background: var(--surface); border-color: #1e293b; }
+
+    .card-name { font-size: 8px; letter-spacing: 3px; color: var(--muted); }
+    .card-value { font-size: 22px; font-family: Georgia, serif; font-weight: 400; color: #e2e8f0; line-height: 1; }
+    .card-value.loading { color: #1e293b; animation: pulse 1.4s ease-in-out infinite; }
+    .card-value.error { font-size: 14px; color: #334155; }
+    .card-signal { font-size: 9px; letter-spacing: 2px; font-weight: 700; }
+    .card-signal.GREEN  { color: var(--g-t); }
+    .card-signal.AMBER  { color: var(--a-t); }
+    .card-signal.RED    { color: var(--r-t); }
+    .card-signal.LOADING{ color: #1e293b; }
+
+    .card-thresholds { font-size: 8px; color: #253350; margin-top: 2px; }
+
+    /* PCR nota especial */
+    .card-note { font-size: 8px; color: #334155; margin-top: 1px; font-style: italic; }
+
+    /* ── VXEEM invertido ── */
+    .card-inverted .card-signal.GREEN { color: var(--r-t) !important; }
+    .card-inverted .card-signal.RED   { color: var(--g-t) !important; }
+
+    /* ── BOTÓN ── */
+    .btn-wrap {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid #1e293b;
+      color: #334155;
+      padding: 10px 28px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .3s;
+    }
+    .btn:hover:not(:disabled) { border-color: #475569; color: #94a3b8; }
+    .btn:disabled { cursor: not-allowed; opacity: .5; }
+
+    /* ── FOOTER ── */
+    .footer {
+      font-size: 8px;
+      color: #1e293b;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* ── SEPARADOR ── */
+    .sep { width: 100%; max-width: 480px; border: none; border-top: 1px solid #0f1923; margin-bottom: 14px; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .3; }
+      50% { opacity: .8; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-label">Patrimonio Familiar · Gestión PP</div>
+    <div class="header-title">Semáforo de Mercado</div>
+    <div class="header-sub">VIX · VSTOXX · VXEFA · VXEEM · PCR · AAII</div>
+  </div>
+
+  <div class="global-box LOADING" id="global-box">
+    <div class="global-label">SEÑAL GLOBAL CONSOLIDADA</div>
+    <div class="global-signal LOADING" id="global-signal">—</div>
+    <div class="global-desc" id="global-desc">consultando indicadores...</div>
+  </div>
+
+  <div class="section-title">Volatilidad — USA</div>
+  <div class="cards" id="cards-vols-usa"></div>
+
+  <div class="section-title">Volatilidad — Europa &amp; Global</div>
+  <div class="cards" id="cards-vols-eu"></div>
+
+  <div class="section-title">Sentimiento — USA</div>
+  <div class="cards" id="cards-sent"></div>
+
+  <hr class="sep"/>
+
+  <div class="btn-wrap">
+    <button class="btn" id="btn-refresh" onclick="fetchAll()">↺ Actualizar</button>
+  </div>
+
+  <div class="footer" id="last-update">—</div>
+
+<script>
+// ── CONFIGURACIÓN DE INDICADORES ─────────────────────────────────────────────
 
 const INDICATORS = [
   {
-    id: "vix", name: "VIX", group: "vol-usa", label: "Volatilidad USA",
+    id: "vix",
+    name: "VIX",
+    section: "usa",
     thresholds: "< 16 | 16–20 | > 20",
     signal: v => v < 16 ? "GREEN" : v <= 20 ? "AMBER" : "RED",
-    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
-    prompt: `Busca el valor actual del VIX (CBOE Volatility Index, ^VIX). Responde SOLO con JSON sin texto ni backticks: {"value": 18.5, "note": ""}`
+    signalLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VIX (CBOE Volatility Index, ticker ^VIX). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": 18.5, "note": ""}
+Donde value es el número actual del VIX con un decimal.`
   },
   {
-    id: "vstoxx", name: "VSTOXX", group: "vol-eu", label: "Volatilidad Europa",
+    id: "vstoxx",
+    name: "VSTOXX",
+    section: "eu",
     thresholds: "< 18 | 18–25 | > 25",
     signal: v => v < 18 ? "GREEN" : v <= 25 ? "AMBER" : "RED",
-    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
-    prompt: `Busca el valor actual del VSTOXX (V2TX, Euro Stoxx 50 Volatility). Responde SOLO con JSON: {"value": 22.0, "note": ""}`
+    signalLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VSTOXX (Euro Stoxx 50 Volatility Index, también llamado V2TX, ticker V2TX). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": 22.3, "note": ""}
+Donde value es el número actual del VSTOXX con un decimal.`
   },
   {
-    id: "vxefa", name: "VXEFA", group: "vol-eu", label: "Vol. Desa. ex-USA",
+    id: "vxefa",
+    name: "VXEFA",
+    section: "eu",
     thresholds: "< 17 | 17–23 | > 23",
     signal: v => v < 17 ? "GREEN" : v <= 23 ? "AMBER" : "RED",
-    sigLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
-    prompt: `Busca el valor actual del VXEFA (CBOE EFA ETF Volatility Index). Responde SOLO con JSON: {"value": 20.0, "note": ""}`
+    signalLabel: { GREEN: "ALCISTA", AMBER: "NEUTRAL", RED: "BAJISTA" },
+    prompt: `Busca el valor actual del VXEFA (CBOE EFA ETF Volatility Index, mercados desarrollados ex-USA). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": 20.1, "note": ""}
+Donde value es el número actual del VXEFA con un decimal.`
   },
   {
-    id: "vxeem", name: "VXEEM", group: "vol-em", label: "Vol. Emergentes",
+    id: "vxeem",
+    name: "VXEEM",
+    section: "eu",
     thresholds: "< 20 | 20–28 | > 28",
-    inverted: true,
     signal: v => v < 20 ? "GREEN" : v <= 28 ? "AMBER" : "RED",
-    sigLabel: { GREEN: "VIGILANCIA ⚠", AMBER: "NEUTRO", RED: "OPORTUNIDAD EM" },
-    prompt: `Busca el valor actual del VXEEM (CBOE Emerging Markets Volatility). Responde SOLO con JSON: {"value": 25.0, "note": ""}`
+    // VXEEM: señal invertida para emergentes (lógica contraria)
+    invertedLogic: true,
+    signalLabel: { GREEN: "VIGILANCIA", AMBER: "NEUTRO", RED: "OPORTUNIDAD" },
+    prompt: `Busca el valor actual del VXEEM (CBOE Emerging Markets ETF Volatility Index, ticker VXEEM). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": 25.4, "note": ""}
+Donde value es el número actual del VXEEM con un decimal.`
   },
   {
-    id: "pcr", name: "PUT/CALL", group: "sent", label: "Sentimiento",
+    id: "pcr",
+    name: "PUT/CALL",
+    section: "sent",
     thresholds: "> 1.20 alcista | < 0.60 bajista",
     signal: v => v > 1.20 ? "GREEN" : v < 0.60 ? "RED" : "AMBER",
-    sigLabel: { GREEN: "MIEDO/ALCISTA", AMBER: "NEUTRAL", RED: "EUFORIA/BAJISTA" },
-    prompt: `Busca el CBOE Total Put/Call Ratio actual. Responde SOLO con JSON: {"value": 0.95, "note": ""}`
+    signalLabel: { GREEN: "MIEDO/ALCISTA", AMBER: "NEUTRAL", RED: "EUFORIA/BAJISTA" },
+    prompt: `Busca el valor actual del CBOE Put/Call Ratio total (Total Put/Call Ratio, ticker $PCALL o CPC). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": 0.95, "note": ""}
+Donde value es el ratio con dos decimales (ejemplo: 0.95, 1.20, 0.58).`
   },
   {
-    id: "aaii", name: "AAII SPREAD", group: "sent", label: "Sentimiento",
+    id: "aaii",
+    name: "AAII BULL-BEAR",
+    section: "sent",
     thresholds: "< −20% alcista | > +30% bajista",
     signal: v => v < -20 ? "GREEN" : v > 30 ? "RED" : "AMBER",
-    sigLabel: { GREEN: "PESIMISMO/ALCISTA", AMBER: "NEUTRAL", RED: "OPTIMISMO/BAJISTA" },
-    prompt: `Busca el último AAII Bull-Bear Spread semanal (% Bullish minus % Bearish). Responde SOLO con JSON: {"value": -15.2, "note": "sem dd/mm"}`
+    signalLabel: { GREEN: "PESIMISMO/ALCISTA", AMBER: "NEUTRAL", RED: "OPTIMISMO/BAJISTA" },
+    prompt: `Busca el último dato semanal del AAII Bull-Bear Spread (diferencia entre % alcistas y % bajistas de la encuesta AAII Investor Sentiment Survey). 
+Responde SOLO con este JSON exacto, sin texto adicional ni backticks:
+{"value": -15.2, "note": "sem dd/mm"}
+Donde value es el spread en puntos porcentuales (puede ser negativo, ej: -15.2 o +22.4).`
   }
 ];
 
-const C = {
-  bg: "#080c12", surface: "#0d1117", border: "#1e293b",
-  text: "#cbd5e1", muted: "#475569", dim: "#1e293b",
-  GREEN: { bg: "#040f08", border: "#16a34a", text: "#4ade80", label: "#22c55e" },
-  AMBER: { bg: "#0c0800", border: "#b45309", text: "#fcd34d", label: "#f59e0b" },
-  RED:   { bg: "#0c0404", border: "#b91c1c", text: "#fca5a5", label: "#ef4444" },
-  LOADING: { bg: "#0d1117", border: "#1e293b", text: "#1e293b", label: "#253350" }
-};
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+const state = { results: {}, errors: {}, loading: {} };
 
-function sigColor(sig) { return (C[sig] || C.LOADING).label; }
+// ── UTILIDADES ───────────────────────────────────────────────────────────────
+function signalColors(sig) {
+  return { GREEN: "#22c55e", AMBER: "#f59e0b", RED: "#ef4444", LOADING: "#253350" }[sig] || "#253350";
+}
 
-function calcGlobal(results) {
-  const mainIds = ["vix","vstoxx","vxefa","pcr","aaii"];
-  const sigs = mainIds.map(id => results[id]?._sig).filter(Boolean);
-  if (sigs.length < 3) return "LOADING";
-  const reds = sigs.filter(s => s === "RED").length;
-  const greens = sigs.filter(s => s === "GREEN").length;
+function globalSignal() {
+  const ids = ["vix","vstoxx","vxefa","pcr","aaii"];
+  const loaded = ids.filter(id => state.results[id]);
+  if (loaded.length < 3) return "LOADING";
+  const reds   = ids.filter(id => state.results[id] && state.results[id]._sig === "RED").length;
+  const greens = ids.filter(id => state.results[id] && state.results[id]._sig === "GREEN").length;
   if (reds >= 3) return "RED";
   if (greens >= 3) return "GREEN";
   return "AMBER";
 }
 
-const GLOBAL_DESC = {
-  GREEN: "Condiciones favorables — posición en renta variable",
-  AMBER: "Señales mixtas — mantener con vigilancia",
-  RED: "Estrés elevado — posición defensiva recomendada",
-  LOADING: "Consultando indicadores..."
-};
-
-function Card({ ind, result, loading, error }) {
-  const sig = result ? ind.signal(result.value) : (loading ? "LOADING" : "LOADING");
-  if (result) result._sig = sig;
-  const col = C[sig] || C.LOADING;
-  const valueStr = result ? String(result.value) : (loading ? "···" : "—");
-
-  return (
-    <div style={{
-      background: col.bg, border: `1px solid ${col.border}`,
-      borderRadius: 8, padding: "12px 14px",
-      display: "flex", flexDirection: "column", gap: 5,
-      transition: "all .4s"
-    }}>
-      <div style={{ fontSize: 8, letterSpacing: 3, color: C.muted }}>{ind.name}</div>
-      <div style={{
-        fontSize: 22, fontFamily: "Georgia, serif", color: "#e2e8f0", lineHeight: 1,
-        opacity: loading ? 0.3 : 1,
-        animation: loading ? "pulse 1.4s infinite" : "none"
-      }}>{valueStr}</div>
-      <div style={{ fontSize: 9, letterSpacing: 2, fontWeight: 700, color: col.text }}>
-        {result ? ind.sigLabel[sig] : (loading ? "···" : "—")}
-      </div>
-      <div style={{ fontSize: 8, color: "#253350" }}>{ind.thresholds}</div>
-      {result?.note && <div style={{ fontSize: 8, color: "#334155", fontStyle: "italic" }}>{result.note}</div>}
-      {ind.inverted && <div style={{ fontSize: 8, color: "#334155", fontStyle: "italic" }}>⚠ lógica invertida EM</div>}
-    </div>
-  );
+function globalDesc(sig) {
+  return {
+    GREEN: "Condiciones de mercado favorables — posición en renta variable",
+    AMBER: "Señales mixtas — mantener posición actual con vigilancia",
+    RED: "Estrés de mercado elevado — posición defensiva recomendada",
+    LOADING: "Consultando indicadores..."
+  }[sig];
 }
 
-function SectionTitle({ label }) {
-  return (
-    <div style={{
-      fontSize: 8, letterSpacing: 4, color: "#253350", textTransform: "uppercase",
-      borderLeft: "2px solid #1e293b", paddingLeft: 8, marginBottom: 8, marginTop: 4
-    }}>{label}</div>
-  );
+function sigLabel(ind, sig) {
+  return ind.signalLabel[sig] || sig;
 }
 
-export default function App() {
-  const [results, setResults] = useState({});
-  const [loading, setLoading] = useState({});
-  const [errors, setErrors] = useState({});
-  const [lastUpdate, setLastUpdate] = useState(null);
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderSection(containerId, sectionKey) {
+  const container = document.getElementById(containerId);
+  const inds = INDICATORS.filter(i => i.section === sectionKey);
+  container.innerHTML = inds.map(ind => {
+    const res   = state.results[ind.id];
+    const err   = state.errors[ind.id];
+    const busy  = state.loading[ind.id];
+    const sig   = res ? ind.signal(res.value) : (busy ? "LOADING" : "ERROR");
+    const label = res ? sigLabel(ind, sig) : (busy ? "···" : "ERROR");
+    const valueStr = res ? String(res.value) : (busy ? "···" : "—");
+    const note  = res?.note || "";
 
-  const fetchOne = async (ind) => {
-    setLoading(p => ({ ...p, [ind.id]: true }));
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 300,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-          messages: [{ role: "user", content: ind.prompt }]
-        })
-      });
-      const data = await res.json();
-      const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-      const match = text.match(/\{[^}]*"value"\s*:\s*-?[\d.]+[^}]*\}/);
-      if (!match) throw new Error("no json");
-      const parsed = JSON.parse(match[0]);
-      if (typeof parsed.value !== "number") throw new Error("bad value");
-      setResults(p => ({ ...p, [ind.id]: parsed }));
-      setErrors(p => ({ ...p, [ind.id]: false }));
-    } catch {
-      setErrors(p => ({ ...p, [ind.id]: true }));
-      setResults(p => { const n = { ...p }; delete n[ind.id]; return n; });
-    } finally {
-      setLoading(p => ({ ...p, [ind.id]: false }));
-    }
-  };
+    // Guardar señal para cálculo global
+    if (res) res._sig = sig;
 
-  const fetchAll = async () => {
-    setResults({});
-    setErrors({});
-    const loadInit = {};
-    INDICATORS.forEach(i => { loadInit[i.id] = true; });
-    setLoading(loadInit);
-    for (let i = 0; i < INDICATORS.length; i++) {
-      setTimeout(() => fetchOne(INDICATORS[i]), i * 350);
-    }
+    const cardClass = res ? sig : (err ? "ERROR" : "LOADING");
+    const invertedClass = ind.invertedLogic ? "card-inverted" : "";
+
+    return `
+      <div class="card ${cardClass} ${invertedClass}">
+        <div class="card-name">${ind.name}</div>
+        <div class="card-value ${busy ? 'loading' : ''} ${err ? 'error' : ''}">${valueStr}</div>
+        <div class="card-signal ${sig}">${label}</div>
+        <div class="card-thresholds">${ind.thresholds}</div>
+        ${note ? `<div class="card-note">${note}</div>` : ''}
+        ${ind.invertedLogic ? `<div class="card-note">⚠ lógica invertida EM</div>` : ''}
+      </div>`;
+  }).join("");
+}
+
+function render() {
+  renderSection("cards-vols-usa", "usa");
+  renderSection("cards-vols-eu", "eu");
+  renderSection("cards-sent", "sent");
+
+  // Global
+  const sig = globalSignal();
+  const box = document.getElementById("global-box");
+  box.className = `global-box ${sig}`;
+  const sigEl = document.getElementById("global-signal");
+  sigEl.className = `global-signal ${sig}`;
+  sigEl.textContent = { GREEN: "VERDE — ALCISTA", AMBER: "ÁMBAR — NEUTRAL", RED: "ROJO — BAJISTA", LOADING: "—" }[sig];
+  document.getElementById("global-desc").textContent = globalDesc(sig);
+
+  // Botón
+  const busy = Object.values(state.loading).some(Boolean);
+  const btn = document.getElementById("btn-refresh");
+  btn.disabled = busy;
+  btn.textContent = busy ? "consultando..." : "↺ Actualizar";
+}
+
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function fetchOne(ind) {
+  state.loading[ind.id] = true;
+  state.errors[ind.id] = false;
+  render();
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 300,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{ role: "user", content: ind.prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    // Extraer JSON del texto
+    const match = text.match(/\{[^}]*"value"\s*:\s*-?[\d.]+[^}]*\}/);
+    if (!match) throw new Error("no json");
+    const parsed = JSON.parse(match[0]);
+    if (typeof parsed.value !== "number") throw new Error("no value");
+    state.results[ind.id] = parsed;
+  } catch(e) {
+    state.errors[ind.id] = true;
+    delete state.results[ind.id];
+  } finally {
+    state.loading[ind.id] = false;
+    render();
+    updateGlobalAfterAll();
+  }
+}
+
+let pendingCount = 0;
+function updateGlobalAfterAll() {
+  pendingCount--;
+  if (pendingCount <= 0) {
     const now = new Date();
-    setTimeout(() => setLastUpdate(
-      now.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" })
-    ), INDICATORS.length * 350 + 2000);
-  };
-
-  useEffect(() => { fetchAll(); }, []);
-
-  const busy = Object.values(loading).some(Boolean);
-  const globalSig = calcGlobal(results);
-  const gCol = C[globalSig] || C.LOADING;
-
-  const groups = [
-    { key: "vol-usa", title: "Volatilidad — USA" },
-    { key: "vol-eu",  title: "Volatilidad — Europa & Global Desarrollado" },
-    { key: "vol-em",  title: "Volatilidad — Emergentes" },
-    { key: "sent",    title: "Sentimiento — USA" }
-  ];
-
-  return (
-    <div style={{
-      minHeight: "100vh", background: C.bg,
-      backgroundImage: "radial-gradient(ellipse 100% 40% at 50% 0%, #0d1829 0%, transparent 60%)",
-      padding: "28px 16px 40px", fontFamily: "'Courier New', monospace",
-      display: "flex", flexDirection: "column", alignItems: "center"
-    }}>
-      <style>{`@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.9} }`}</style>
-
-      {/* Header */}
-      <div style={{ maxWidth: 480, width: "100%", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 8, letterSpacing: 5, color: "#1e293b", marginBottom: 5 }}>PATRIMONIO FAMILIAR · GESTIÓN PP</div>
-        <div style={{ fontSize: 18, color: "#e2e8f0", letterSpacing: 2, fontFamily: "Georgia, serif" }}>Semáforo de Mercado</div>
-        <div style={{ fontSize: 9, color: C.muted, marginTop: 4, letterSpacing: 2 }}>VIX · VSTOXX · VXEFA · VXEEM · PCR · AAII</div>
-      </div>
-
-      {/* Señal global */}
-      <div style={{
-        maxWidth: 480, width: "100%", border: `1px solid ${gCol.border}`,
-        background: gCol.bg, borderRadius: 8, padding: "16px",
-        marginBottom: 20, textAlign: "center", transition: "all .4s"
-      }}>
-        <div style={{ fontSize: 8, letterSpacing: 4, color: C.muted, marginBottom: 8 }}>SEÑAL GLOBAL CONSOLIDADA</div>
-        <div style={{ fontSize: 22, color: gCol.label, fontFamily: "Georgia, serif", letterSpacing: 3 }}>
-          {{ GREEN: "▲ VERDE — ALCISTA", AMBER: "◆ ÁMBAR — NEUTRAL", RED: "▼ ROJO — BAJISTA", LOADING: "—" }[globalSig]}
-        </div>
-        <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>{GLOBAL_DESC[globalSig]}</div>
-      </div>
-
-      {/* Grupos de indicadores */}
-      {groups.map(g => {
-        const inds = INDICATORS.filter(i => i.group === g.key);
-        return (
-          <div key={g.key} style={{ maxWidth: 480, width: "100%", marginBottom: 18 }}>
-            <SectionTitle label={g.title} />
-            <div style={{ display: "grid", gridTemplateColumns: inds.length === 1 ? "1fr" : "1fr 1fr", gap: 10 }}>
-              {inds.map(ind => (
-                <Card key={ind.id} ind={ind}
-                  result={results[ind.id]} loading={loading[ind.id]} error={errors[ind.id]} />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Botón */}
-      <div style={{ maxWidth: 480, width: "100%", textAlign: "center", marginBottom: 10 }}>
-        <button disabled={busy} onClick={fetchAll} style={{
-          background: "transparent", border: `1px solid ${busy ? "#1e293b" : "#253350"}`,
-          color: busy ? "#1e293b" : "#475569",
-          padding: "10px 28px", fontFamily: "'Courier New', monospace",
-          fontSize: 9, letterSpacing: 4, textTransform: "uppercase",
-          borderRadius: 4, cursor: busy ? "not-allowed" : "pointer",
-          transition: "all .3s"
-        }}>
-          {busy ? "consultando..." : "↺ Actualizar"}
-        </button>
-      </div>
-
-      {lastUpdate && (
-        <div style={{ fontSize: 8, color: "#1e293b", letterSpacing: 2 }}>Actualizado {lastUpdate}</div>
-      )}
-
-      {/* Nota VXEEM */}
-      <div style={{ maxWidth: 480, width: "100%", marginTop: 16, borderTop: "1px solid #0f1923", paddingTop: 12 }}>
-        <div style={{ fontSize: 8, color: "#1e293b", lineHeight: 1.8 }}>
-          ⚠ VXEEM usa lógica invertida: VIX alto en EM históricamente precede recuperaciones (MSCI EM procíclico tardío). No usar como señal automática de salida.<br/>
-          Señal global basada en VIX · VSTOXX · VXEFA · PCR · AAII (mayoría de 3/5).
-        </div>
-      </div>
-    </div>
-  );
+    document.getElementById("last-update").textContent =
+      "Actualizado " + now.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
+  }
 }
+
+async function fetchAll() {
+  state.results = {};
+  state.errors  = {};
+  INDICATORS.forEach(i => { state.loading[i.id] = true; });
+  pendingCount = INDICATORS.length;
+  render();
+  // Peticiones en paralelo pero escalonadas levemente para no saturar
+  for (let i = 0; i < INDICATORS.length; i++) {
+    setTimeout(() => fetchOne(INDICATORS[i]), i * 300);
+  }
+}
+
+// ── SERVICE WORKER ───────────────────────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+fetchAll();
+</script>
+</body>
+</html>
